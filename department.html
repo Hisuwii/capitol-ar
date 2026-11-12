@@ -3,35 +3,50 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Department — CU AR Directory</title>
+<title>Department — Capitol University AR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<meta name="theme-color" content="#0b0809">
 </head>
 <body class="dept-page">
-<div class="dept-container">
-  <button class="back-btn" onclick="history.length > 1 ? history.back() : (location.href = 'index.html')">&#8592; Back to Departments</button>
-  <div class="dept-header">
+<header class="topbar">
+  <button class="icon-btn" aria-label="Back" onclick="history.length > 1 ? history.back() : (location.href = 'index.html')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+  </button>
+  <a href="index.html" class="topbar-title">Capitol University <span>AR</span></a>
+</header>
+<main class="dept-container">
+  <section class="dept-hero">
     <img src="" alt="" class="dept-logo" id="dept-logo">
     <div class="dept-title">
-      <span class="dept-code" id="dept-code"></span>
-      <h1 id="dept-name">Loading...</h1>
+      <span class="chip" id="dept-code"></span>
+      <h1 id="dept-name">Loading…</h1>
+    </div>
+  </section>
+  <div class="dept-layout">
+    <section class="card viewer-card">
+      <div class="card-head">
+        <h2><span class="eyebrow">Mascot</span><span id="mascot-label">—</span></h2>
+        <span class="viewer-hint">Drag to rotate · pinch to zoom</span>
+      </div>
+      <div id="mascot-viewer">
+        <div class="viewer-loading"><div class="spinner"></div><span>Loading 3D mascot…</span></div>
+      </div>
+    </section>
+    <div class="dept-info">
+      <section class="card">
+        <div class="card-head"><h2>About</h2></div>
+        <p id="dept-desc"></p>
+      </section>
+      <section class="card">
+        <div class="card-head"><h2>Programs</h2><span class="count" id="prog-count"></span></div>
+        <ul class="programs-list" id="dept-programs"></ul>
+      </section>
     </div>
   </div>
-  <div class="dept-card">
-    <h2 class="card-label">About the Department</h2>
-    <p id="dept-desc"></p>
-  </div>
-  <div class="dept-card">
-    <h2 class="card-label">Programs Offered</h2>
-    <ul class="programs-list" id="dept-programs"></ul>
-  </div>
-  <div class="dept-card">
-    <h2 class="card-label" id="mascot-label">Department Mascot</h2>
-    <div id="mascot-viewer">
-      <div class="viewer-loading"><div class="spinner"></div><p>Loading 3D model...</p></div>
-    </div>
-    <p class="viewer-hint">Drag to rotate &nbsp;·&nbsp; Scroll or pinch to zoom</p>
-  </div>
-</div>
+</main>
 <script>
 (async function () {
   var id = parseInt(new URLSearchParams(location.search).get('id'), 10);
@@ -45,7 +60,7 @@
   var dept = depts.find(function (d) { return d.id === id; });
   if (!dept) { location.replace('index.html'); return; }
 
-  document.title = dept.name + ' — CU AR Directory';
+  document.title = dept.name + ' — Capitol University AR';
   var logo = document.getElementById('dept-logo');
   logo.src = dept.logo_path;
   logo.alt = dept.code + ' Logo';
@@ -58,7 +73,8 @@
     li.textContent = p;
     ul.appendChild(li);
   });
-  document.getElementById('mascot-label').textContent = 'Department Mascot: ' + dept.mascot_name;
+  document.getElementById('mascot-label').textContent = dept.mascot_name;
+  document.getElementById('prog-count').textContent = dept.programs.length + (dept.programs.length === 1 ? ' program' : ' programs');
 
   var viewer = document.getElementById('mascot-viewer');
   viewer.dataset.mascot = dept.mascot_name;

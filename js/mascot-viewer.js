@@ -25,7 +25,7 @@
     }
 
     var W = container.clientWidth || 400;
-    var H = 380;
+    var H = container.clientHeight || 340;
     var PLATFORM_TOP = -0.57;
     var TAU = Math.PI * 2;
 
@@ -854,17 +854,6 @@
     var mascotH = size.y * fit;
     target.set(0, PLATFORM_TOP + mascotH * 0.45 + (mascot.hover || 0) * 0.5, 0);
 
-    // Name label
-    var label = document.createElement('div');
-    label.textContent = mascotName;
-    label.style.cssText =
-        'position:absolute;bottom:14px;left:50%;transform:translateX(-50%);' +
-        'color:#' + new THREE.Color(theme.ring).getHexString() + ';font-size:0.95rem;font-weight:700;' +
-        'letter-spacing:0.12em;text-transform:uppercase;pointer-events:none;white-space:nowrap;' +
-        'text-shadow:0 1px 6px rgba(0,0,0,0.9);font-family:inherit;';
-    container.style.position = 'relative';
-    container.appendChild(label);
-
     // ── Orbit camera (drag to rotate, wheel / pinch to zoom) ──────────────────
     var theta = 0.45, phi = 1.4, radius = 3.9;
     var MIN_R = 2.2, MAX_R = 7;
@@ -931,6 +920,7 @@
     // ── Resize ───────────────────────────────────────────────────────────────
     window.addEventListener('resize', function () {
         var w = container.clientWidth || W;
+        H = container.clientHeight || H;
         camera.aspect = w / H;
         camera.updateProjectionMatrix();
         renderer.setSize(w, H);

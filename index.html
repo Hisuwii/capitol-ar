@@ -3,31 +3,32 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>CU AR Department Directory</title>
+<title>Capitol University AR</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="css/style.css">
+<meta name="theme-color" content="#0b0809">
 </head>
 <body>
 <div id="ar-container">
   <div id="loading-overlay">
-    <div class="spinner" id="spinner"></div>
-    <p class="loading-title">CU AR Directory</p>
-    <p class="loading-sub" id="loading-sub">Loading AR engine...</p>
-    <div id="progress-wrap" style="width:220px;height:10px;background:rgba(255,255,255,0.1);border-radius:9px;overflow:hidden;margin:0.5rem auto;display:none">
-      <div id="progress-bar" style="height:100%;width:0%;background:#4a9eff;border-radius:9px;transition:width 0.3s"></div>
+    <div class="intro">
+      <header class="wordmark">
+        <h1>Capitol University</h1>
+        <p>Augmented Reality</p>
+      </header>
+      <p class="lead">Scan the CU logo to explore every college in 3D.</p>
+      <div class="status"><div class="spinner" id="spinner"></div><span class="loading-sub" id="loading-sub">Loading AR engine…</span></div>
+      <div id="progress-wrap" class="progress"><div id="progress-bar"></div></div>
+      <button id="start-ar-btn" class="btn btn-primary">Start AR camera</button>
+      <a href="target.html" class="btn btn-ghost">Show the CU logo to scan</a>
+      <p class="eyebrow section-label">Or browse colleges</p>
+      <div class="dept-grid" id="dept-grid"></div>
     </div>
-    <button id="start-ar-btn"
-      style="display:none;margin-top:1.5rem;padding:0.9rem 2.4rem;
-             background:#003366;color:#fff;border:2px solid #4a9eff;
-             border-radius:2rem;font-size:1.1rem;font-weight:700;cursor:pointer">
-      Tap to Start AR Camera
-    </button>
-    <a href="target.html"
-       style="display:block;margin-top:0.9rem;color:#4a9eff;font-size:0.85rem;text-decoration:none;">
-      &#128247; Show CU Logo for scanning
-    </a>
   </div>
   <div id="scan-hint" class="hidden">
-    <p>Point camera at the <strong>CU Logo</strong></p>
+    <span>Point your camera at the <strong>CU logo</strong></span>
   </div>
 </div>
 <script>
@@ -36,15 +37,32 @@
   var wrap = document.getElementById('progress-wrap');
   var bar  = document.getElementById('progress-bar');
 
+  fetch('data/departments.json', { cache: 'no-cache' }).then(function (r) { return r.json(); }).then(function (all) {
+    var grid = document.getElementById('dept-grid');
+    all.forEach(function (d) {
+      var a = document.createElement('a');
+      a.className = 'dept-tile';
+      a.href = 'department.html?id=' + d.id;
+      var img = document.createElement('img');
+      img.src = d.logo_path; img.alt = ''; img.loading = 'lazy';
+      var t = document.createElement('div');
+      var b = document.createElement('b'); b.textContent = d.code;
+      var sp = document.createElement('span'); sp.textContent = d.name.replace(/^College of /, '');
+      t.appendChild(b); t.appendChild(sp);
+      a.appendChild(img); a.appendChild(t);
+      grid.appendChild(a);
+    });
+  }).catch(function () {});
+
   var startTime = Date.now();
   wrap.style.display = 'block';
-  sub.textContent    = 'Downloading AR engine (1.8 MB)...';
+  sub.textContent    = 'Downloading AR engine (1.8 MB)…';
 
   var fakeTimer = setInterval(function () {
     var elapsed = (Date.now() - startTime) / 1000;
     var pct = Math.min(90, Math.round((1 - Math.exp(-elapsed / 30)) * 100));
     bar.style.width = pct + '%';
-    sub.textContent = 'Downloading AR engine... ' + pct + '%';
+    sub.textContent = 'Downloading AR engine… ' + pct + '%';
   }, 500);
 
   var s = document.createElement('script');
@@ -52,7 +70,7 @@
   s.onload = async function () {
     clearInterval(fakeTimer);
     bar.style.width = '100%';
-    sub.textContent = 'AR engine loaded. Loading logos...';
+    sub.textContent = 'AR engine loaded. Loading logos…';
     try {
       var res = await fetch('data/departments.json', { cache: 'no-cache' });
       var all = await res.json();

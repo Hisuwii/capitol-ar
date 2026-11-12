@@ -35,8 +35,9 @@
 
     // ── Show button immediately — iOS requires a user tap before camera access ──
     if (progressWrap) progressWrap.style.display = 'none';
-    loadingSub.textContent = 'Ready!';
-    startBtn.style.display = 'block';
+    loadingSub.textContent = 'Ready — tap to start the camera';
+    spinner.style.display  = 'none';
+    startBtn.style.display = 'flex';
 
     await new Promise(resolve => {
         startBtn.addEventListener('click', resolve, { once: true });
