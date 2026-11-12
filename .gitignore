@@ -1,0 +1,5 @@
+# Local-only (XAMPP) files - not used by the static GitHub Pages site
+_local/
+api/
+config/
+db/

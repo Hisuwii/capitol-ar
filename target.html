@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>CU Logo — AR Target</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    background: #ffffff;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Segoe UI', system-ui, sans-serif;
+  }
+  #target-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 100vw;
+    height: 100vh;
+    background: #fff;
+    transition: all 0.3s;
+  }
+  #target-wrap.fullscreen-active {
+    padding: 0;
+  }
+  #logo {
+    width: min(80vw, 80vh);
+    height: min(80vw, 80vh);
+    object-fit: contain;
+    display: block;
+  }
+  #hint {
+    margin-top: 1.2rem;
+    color: #555;
+    font-size: 0.9rem;
+    text-align: center;
+    padding: 0 1rem;
+  }
+  #controls {
+    position: fixed;
+    bottom: 1.5rem;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    gap: 0.75rem;
+    z-index: 10;
+  }
+  button {
+    padding: 0.65rem 1.4rem;
+    border: none;
+    border-radius: 2rem;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  #fullscreen-btn {
+    background: #003366;
+    color: #fff;
+  }
+  #back-btn {
+    background: rgba(0,0,0,0.08);
+    color: #333;
+  }
+  /* When fullscreen: hide hint and controls */
+  body.fs #hint,
+  body.fs #controls { display: none; }
+  body.fs #logo {
+    width: 100vw;
+    height: 100vh;
+    object-fit: contain;
+  }
+</style>
+</head>
+<body>
+<div id="target-wrap">
+  <img id="logo" src="assets/targets/cu-logo.jpg" alt="CU Logo — AR Target">
+  <p id="hint">Show this logo to the AR camera on another device.<br>Tap the button below to go full screen for easier scanning.</p>
+</div>
+
+<div id="controls">
+  <button id="back-btn" onclick="history.back()">&#8592; Back</button>
+  <button id="fullscreen-btn" onclick="goFullscreen()">&#x26F6; Full Screen</button>
+</div>
+
+<script>
+function goFullscreen() {
+  const el = document.documentElement;
+  if (el.requestFullscreen)            el.requestFullscreen();
+  else if (el.webkitRequestFullscreen) el.webkitRequestFullscreen();
+  document.body.classList.add('fs');
+}
+
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement) document.body.classList.remove('fs');
+});
+
+// Tap anywhere on the logo to toggle fullscreen
+document.getElementById('logo').addEventListener('click', goFullscreen);
+
+// Keep screen awake if Wake Lock API is available
+if ('wakeLock' in navigator) {
+  navigator.wakeLock.request('screen').catch(() => {});
+}
+</script>
+</body>
+</html>

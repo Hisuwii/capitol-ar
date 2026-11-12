@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MindAR Compiler — CU AR</title>
+<script type="importmap">
+{"imports":{"mind-ar/image":"https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image.prod.js"}}
+</script>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0d1b33;
+    color: #e0eaff;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+  }
+  .card {
+    background: rgba(255,255,255,0.05);
+    border: 1px solid rgba(255,255,255,0.1);
+    border-radius: 1rem;
+    padding: 2rem;
+    max-width: 420px;
+    width: 100%;
+    text-align: center;
+  }
+  h1 { font-size: 1.3rem; margin-bottom: 0.5rem; }
+  .sub { color: #8899bb; font-size: 0.88rem; margin-bottom: 1.5rem; line-height: 1.6; }
+  #preview {
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    border-radius: 0.5rem;
+    background: rgba(255,255,255,0.03);
+    margin: 0 auto 1.5rem;
+    display: block;
+  }
+  button {
+    width: 100%;
+    padding: 0.85rem;
+    border: none;
+    border-radius: 0.6rem;
+    color: #fff;
+    font-size: 1rem;
+    cursor: pointer;
+    margin-top: 0.75rem;
+    transition: opacity 0.2s;
+  }
+  button:disabled { opacity: 0.4; cursor: not-allowed; }
+  #compileBtn  { background: #003366; }
+  #compileBtn:hover:not(:disabled) { background: #004488; }
+  .progress-wrap {
+    display: none;
+    margin-top: 1.2rem;
+  }
+  .progress-bg {
+    background: rgba(255,255,255,0.08);
+    border-radius: 1rem;
+    overflow: hidden;
+    height: 10px;
+    margin-bottom: 0.5rem;
+  }
+  .progress-fill {
+    height: 100%;
+    background: #4a9eff;
+    border-radius: 1rem;
+    transition: width 0.3s;
+    width: 0%;
+  }
+  #status { font-size: 0.85rem; color: #8899bb; min-height: 1.2em; }
+  .success { color: #44cc88 !important; font-size: 1rem !important; margin-top: 0.5rem; }
+  .error   { color: #ff6666 !important; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>MindAR Compiler</h1>
+  <p class="sub">Compiles the CU logo into an AR image target and saves it directly to the server.</p>
+
+  <img id="preview" src="assets/targets/cu-logo.jpg" alt="CU Logo">
+
+  <button id="compileBtn">Compile &amp; Save to Server</button>
+
+  <div class="progress-wrap" id="progressWrap">
+    <div class="progress-bg">
+      <div class="progress-fill" id="progressFill"></div>
+    </div>
+    <div id="status">Starting...</div>
+  </div>
+</div>
+
+<script type="module">
+import { Compiler } from 'mind-ar/image';
+const compileBtn    = document.getElementById('compileBtn');
+const progressWrap  = document.getElementById('progressWrap');
+const progressFill  = document.getElementById('progressFill');
+const statusEl      = document.getElementById('status');
+
+compileBtn.addEventListener('click', async () => {
+  compileBtn.disabled = true;
+  progressWrap.style.display = 'block';
+  statusEl.className = '';
+
+  // Load the CU logo image (already on server)
+  const img = new Image();
+  img.crossOrigin = 'anonymous';
+  img.src = 'assets/targets/cu-logo.jpg?t=' + Date.now();
+  statusEl.textContent = 'Loading CU logo...';
+  progressFill.style.width = '5%';
+
+  try {
+    await new Promise((resolve, reject) => {
+      img.onload  = resolve;
+      img.onerror = () => reject(new Error('Could not load cu-logo.jpg'));
+    });
+
+    statusEl.textContent = 'Compiling image target (this takes ~30 seconds)...';
+    progressFill.style.width = '10%';
+
+    const compiler = new Compiler();
+    await compiler.compileImageTargets([img], (progress) => {
+      const pct = Math.round(progress * 85) + 10;
+      progressFill.style.width = pct + '%';
+      statusEl.textContent = `Compiling... ${Math.round(progress * 100)}%`;
+    });
+
+    progressFill.style.width = '97%';
+    statusEl.textContent = 'Exporting data...';
+
+    const buffer = await compiler.exportData();
+
+    statusEl.textContent = 'Saving...';
+    let saved = false;
+    try {
+      const res = await fetch('api/upload-mind.php', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/octet-stream' },
+        body: buffer,
+      });
+      const json = await res.json();
+      saved = !!json.ok;
+    } catch (e) { saved = false; }
+
+    progressFill.style.width = '100%';
+    statusEl.className = 'success';
+    if (saved) {
+      statusEl.textContent = '✅ Done! cu-logo.mind saved to server.';
+    } else {
+      // Static hosting (GitHub Pages): no PHP, so download the file instead.
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(new Blob([buffer]));
+      a.download = 'cu-logo.mind';
+      a.click();
+      statusEl.textContent = '✅ Done! cu-logo.mind downloaded — put it in assets/targets/ and push.';
+    }
+    compileBtn.textContent = '✅ Compiled — Go to AR App';
+    compileBtn.disabled = false;
+    compileBtn.style.background = '#006633';
+    compileBtn.onclick = () => window.location.href = 'index.html';
+  } catch (err) {
+    progressFill.style.width = '0%';
+    statusEl.textContent = '❌ ' + err.message;
+    statusEl.className = 'error';
+    compileBtn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
